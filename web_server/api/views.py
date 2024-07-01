@@ -8,7 +8,12 @@ def hello(request):
     visitor_name = request.GET.get('visitor_name', 'Guest')
     client_ip = request.META.get('REMOTE_ADDR')
     
-    # Fetch location using IP
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        client_ip = x_forwarded_for.split(',')[0]
+    else:
+        client_ip = request.META.get('REMOTE_ADDR')
+
     location_response = requests.get(f'https://ipinfo.io/{client_ip}/json?token=21714eb2148e07')
     location_data = location_response.json()
     location = location_data.get('city', 'Unknown')
@@ -24,7 +29,6 @@ def hello(request):
         "client_ip": client_ip,
         "location": location,
         "greeting": f"Hello, {visitor_name}!, the temperature is {temperature} degrees Celsius in {location}",
-        "loc" : loc
     }
 
     serializer = HelloSerializer(data)
